@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grievances - Krish-Sahayak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Similar styles as previous pages */
+    </style>
+</head>
+<body class="min-h-screen p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <!-- Navigation similar to previous pages -->
+
+    <script>
+        // Grievances data and functionality
+        const grievancesData = {
+            categories: [
+                "Crop Damage", "Pest Attack", "Irrigation Issues", 
+                "Soil Problems", "Market Access", "Subsidy Delays",
+                "Weather Damage", "Equipment Issues", "Other"
+            ],
+            statuses: {
+                "pending": { color: "yellow", text: "Pending" },
+                "in_progress": { color: "blue", text: "In Progress" },
+                "resolved": { color: "green", text: "Resolved" },
+                "rejected": { color: "red", text: "Rejected" }
+            }
+        };
+
+        // API functions for grievances
+        const grievancesAPI = {
+            async submitGrievance(grievanceData) {
+                const token = localStorage.getItem('ks_token');
+                const response = await fetch(`${API_BASE}/grievances`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(grievanceData)
+                });
+                return await response.json();
+            },
+
+            async getGrievances() {
+                const token = localStorage.getItem('ks_token');
+                const response = await fetch(`${API_BASE}/grievances`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return await response.json();
+            }
+        };
+
+        // Render grievance form and list
+        function renderGrievanceForm() {
+            return `
+                <div class="glass-effect rounded-2xl p-6 mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4" data-lang="submit_grievance">Submit New Grievance</h3>
+                    <form id="grievance-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="category">Category</label>
+                                <select name="category" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                                    <option value="">Select Category</option>
+                                    ${grievancesData.categories.map(cat => 
+                                        `<option value="${cat}">${cat}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="priority">Priority</label>
+                                <select name="priority" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="subject">Subject</label>
+                            <input type="text" name="subject" class="w-full p-3 border border-gray-300 rounded-lg" required 
+                                   placeholder="Brief description of your grievance">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="description">Description</label>
+                            <textarea name="description" rows="4" class="w-full p-3 border border-gray-300 rounded-lg" required
+                                      placeholder="Detailed description of the issue"></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="location">Location</label>
+                                <input type="text" name="location" class="w-full p-3 border border-gray-300 rounded-lg" required
+                                       placeholder="Village, District">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-lang="contact">Contact Number</label>
+                                <input type="tel" name="contact" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            <span data-lang="submit_grievance_btn">Submit Grievance</span>
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
+
+        function renderGrievanceList(grievances) {
+            return `
+                <div class="glass-effect rounded-2xl p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4" data-lang="my_grievances">My Grievances</h3>
+                    <div class="space-y-4">
+                        ${grievances.length === 0 ? `
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-inbox text-4xl mb-3"></i>
+                                <p data-lang="no_grievances">No grievances submitted yet</p>
+                            </div>
+                        ` : grievances.map(grievance => `
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-${grievancesData.statuses[grievance.status].color}-500">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-semibold text-lg">${grievance.subject}</h4>
+                                    <span class="px-3 py-1 rounded-full text-sm bg-${grievancesData.statuses[grievance.status].color}-100 text-${grievancesData.statuses[grievance.status].color}-800">
+                                        ${grievancesData.statuses[grievance.status].text}
+                                    </span>
+                                </div>
+                                <p class="text-gray-600 mb-2">${grievance.description}</p>
+                                <div class="flex justify-between text-sm text-gray-500">
+                                    <span>${grievance.category} • ${grievance.location}</span>
+                                    <span>${new Date(grievance.date).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

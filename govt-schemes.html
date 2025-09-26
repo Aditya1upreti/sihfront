@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Schemes - Krish-Sahayak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Similar styles as subsidies.html */
+        .scheme-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .scheme-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .scheme-national {
+            border-left-color: #3b82f6;
+        }
+        
+        .scheme-state {
+            border-left-color: #10b981;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <!-- Navigation -->
+    <nav class="glass-effect rounded-2xl p-4 mb-6 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/dashboard" class="flex items-center space-x-3 text-gray-800">
+                <i class="fas fa-arrow-left"></i>
+                <span data-lang="back_to_dashboard">Back to Dashboard</span>
+            </a>
+            
+            <div class="flex items-center space-x-4">
+                <div class="flex bg-gray-100 rounded-full p-1">
+                    <button id="lang-en" class="lang-btn active px-3 py-1 rounded-full text-sm font-medium">EN</button>
+                    <button id="lang-ml" class="lang-btn px-3 py-1 rounded-full text-sm font-medium">ML</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto max-w-6xl">
+        <!-- Header -->
+        <div class="text-center mb-8 slide-in">
+            <h1 class="text-4xl font-bold text-white mb-2" data-lang="schemes_title">Government Schemes for Kerala Farmers</h1>
+            <p class="text-white/80 text-lg" data-lang="schemes_subtitle">Central and State government agricultural schemes</p>
+        </div>
+
+        <!-- Scheme Types -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="scheme-card glass-effect rounded-2xl p-6 text-center scheme-national">
+                <i class="fas fa-flag text-3xl text-blue-600 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">12+</div>
+                <p class="text-gray-600" data-lang="national_schemes">National Schemes</p>
+            </div>
+            
+            <div class="scheme-card glass-effect rounded-2xl p-6 text-center scheme-state">
+                <i class="fas fa-landmark text-3xl text-green-600 mb-3"></i>
+                <div class="text-2xl font-bold text-gray-800">8+</div>
+                <p class="text-gray-600" data-lang="state_schemes">State Schemes</p>
+            </div>
+        </div>
+
+        <!-- Schemes Container -->
+        <div class="glass-effect rounded-2xl p-6 shadow-lg slide-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800" data-lang="available_schemes">Available Schemes</h3>
+                <div class="flex space-x-2">
+                    <button id="filter-national" class="px-4 py-2 rounded-lg bg-blue-100 text-blue-800 font-semibold" data-lang="national">National</button>
+                    <button id="filter-state" class="px-4 py-2 rounded-lg bg-green-100 text-green-800 font-semibold" data-lang="state">State</button>
+                    <button id="filter-all" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 font-semibold" data-lang="all_schemes">All</button>
+                </div>
+            </div>
+            
+            <div id="schemes-container">
+                <!-- Schemes will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = '/api';
+
+        // Translations
+        const translations = {
+            'en': {
+                'back_to_dashboard': 'Back to Dashboard',
+                'schemes_title': 'Government Schemes for Kerala Farmers',
+                'schemes_subtitle': 'Central and State government agricultural schemes',
+                'national_schemes': 'National Schemes',
+                'state_schemes': 'State Schemes',
+                'available_schemes': 'Available Schemes',
+                'national': 'National',
+                'state': 'State',
+                'all_schemes': 'All Schemes',
+                'view_details': 'View Details',
+                'apply_now': 'Apply Now',
+                'benefits': 'Benefits',
+                'eligibility': 'Eligibility',
+                'contact': 'Contact',
+                'implementing_agency': 'Implementing Agency',
+                'last_date': 'Last Date',
+                'scheme_type': 'Scheme Type'
+            },
+            'ml': {
+                'back_to_dashboard': 'ഡാഷ്ബോർഡിലേക്ക് മടങ്ങുക',
+                'schemes_title': 'കേരള കർഷകര്‍ക്കുള്ള സർക്കാർ പദ്ധതികൾ',
+                'schemes_subtitle': 'കേന്ദ്ര-സംസ്ഥാന സർക്കാർ കാർഷിക പദ്ധതികൾ',
+                'national_schemes': 'ദേശീയ പദ്ധതികൾ',
+                'state_schemes': 'സംസ്ഥാന പദ്ധതികൾ',
+                'available_schemes': 'ലഭ്യമായ പദ്ധതികൾ',
+                'national': 'ദേശീയ',
+                'state': 'സംസ്ഥാന',
+                'all_schemes': 'എല്ലാ പദ്ധതികളും',
+                'view_details': 'വിശദാംശങ്ങൾ കാണുക',
+                'apply_now': 'ഇപ്പോൾ അപേക്ഷിക്കുക',
+                'benefits': 'പ്രയോജനങ്ങൾ',
+                'eligibility': 'താല്‍പ്പര്യം',
+                'contact': 'ബന്ധപ്പെടുക',
+                'implementing_agency': 'നടപ്പാക്കുന്ന ഏജൻസി',
+                'last_date': 'അവസാന തീയതി',
+                'scheme_type': 'പദ്ധതി തരം'
+            }
+        };
+
+        let currentLang = 'en';
+        let currentFilter = 'all';
+
+        // Kerala Government Schemes Data
+        const keralaSchemes = {
+            schemes: [
+                {
+                    id: 1,
+                    name: "Pradhan Mantri Fasal Bima Yojana",
+                    name_ml: "പ്രധാനമന്ത്രി ഫസൽ ബിമാ യോജന",
+                    type: "national",
+                    benefits: "Crop insurance against natural calamities",
+                    benefits_ml: "പ്രകൃതി വിപത്തുകളിൽ നിന്നുള്ള വിള ഇൻഷുറൻസ്",
+                    eligibility: "All farmers including sharecroppers and tenant farmers",
+                    eligibility_ml: "ഷെയർക്രോപ്പർമാർ, കുടിയാന്മാർ എന്നിവരുൾപ്പെടെയുള്ള എല്ലാ കർഷകരും",
+                    contact: "1800-110-001",
+                    agency: "Agriculture Insurance Company",
+                    lastDate: "2024-12-31",
+                    description: "Comprehensive crop insurance scheme for farmers' risk protection",
+                    description_ml: "കർഷകരുടെ റിസ്ക് പരിരക്ഷയ്ക്കുള്ള സമഗ്ര വിള ഇൻഷുറൻസ് പദ്ധതി"
+                },
+                {
+                    id: 2,
+                    name: "Kerala State Organic Farming Policy",
+                    name_ml: "കേരള സംസ്ഥാന ഓർഗാനിക് ഫാമിംഗ് പോളിസി",
+                    type: "state",
+                    benefits: "Support for organic farming and market linkage",
+                    benefits_ml: "ഓർഗാനിക് ഫാമിംഗിനും വിപണി ബന്ധത്തിനുമുള്ള പിന്തുണ",
+                    eligibility: "Farmers practicing organic farming methods",
+                    eligibility_ml: "ഓർഗാനിക് ഫാമിംഗ് രീതികൾ പ്രയോഗിക്കുന്ന കർഷകർ",
+                    contact: "0471-2326777",
+                    agency: "Kerala Agriculture Department",
+                    lastDate: "2024-08-15",
+                    description: "Promotion of organic farming practices in Kerala",
+                    description_ml: "കേരളത്തിൽ ഓർഗാനിക് ഫാമിംഗ് പരിശീലനങ്ങൾ പ്രോത്സാഹിപ്പിക്കൽ"
+                },
+                {
+                    id: 3,
+                    name: "National Mission on Sustainable Agriculture",
+                    name_ml: "സുസ്ഥിര കൃഷിയിലെ ദേശീയ ദൗത്യം",
+                    type: "national",
+                    benefits: "Promotion of sustainable agricultural practices",
+                    benefits_ml: "സുസ്ഥിര കാർഷിക പരിശീലനങ്ങൾ പ്രോത്സാഹിപ്പിക്കൽ",
+                    eligibility: "Farmers adopting sustainable farming methods",
+                    eligibility_ml: "സുസ്ഥിര കൃഷി രീതികൾ സ്വീകരിക്കുന്ന കർഷകർ",
+                    contact: "011-23381284",
+                    agency: "Ministry of Agriculture",
+                    lastDate: "2024-11-30",
+                    description: "Mission to promote sustainable agriculture through various interventions",
+                    description_ml: "വിവിധ ഇടപെടലുകൾ വഴി സുസ്ഥിര കൃഷി പ്രോത്സാഹിപ്പിക്കാനുള്ള ദൗത്യം"
+                },
+                {
+                    id: 4,
+                    name: "Kerala Horticulture Development Scheme",
+                    name_ml: "കേരള ഹോർട്ടികൾച്ചർ വികസന പദ്ധതി",
+                    type: "state",
+                    benefits: "Development of horticulture crops and infrastructure",
+                    benefits_ml: "ഹോർട്ടികൾച്ചർ വിളകളുടെയും അടിസ്ഥാന സൗകര്യങ്ങളുടെയും വികസനം",
+                    eligibility: "Horticulture farmers with minimum 0.25 acres",
+                    eligibility_ml: "കുറഞ്ഞത് 0.25 ഏക്കർ ഉള്ള ഹോർട്ടികൾച്ചർ കർഷകർ",
+                    contact: "0471-2326880",
+                    agency: "Kerala Horticulture Mission",
+                    lastDate: "2024-07-20",
+                    description: "Scheme for promoting horticulture crop cultivation in Kerala",
+                    description_ml: "കേരളത്തിൽ ഹോർട്ടികൾച്ചർ വിളകളുടെ കൃഷി പ്രോത്സാഹിപ്പിക്കാനുള്ള പദ്ധതി"
+                }
+            ]
+        };
+
+        // API functions
+        const schemesAPI = {
+            async getSchemes(filter = 'all') {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                if (filter === 'all') {
+                    return { schemes: keralaSchemes.schemes };
+                }
+                
+                const filteredSchemes = keralaSchemes.schemes.filter(scheme => 
+                    scheme.type === filter
+                );
+                
+                return { schemes: filteredSchemes };
+            }
+        };
+
+        // Language management
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-lang]').forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            document.getElementById('lang-ml').classList.toggle('active', lang === 'ml');
+            
+            // Re-render schemes with new language
+            renderSchemes(keralaSchemes.schemes.filter(scheme => 
+                currentFilter === 'all' || scheme.type === currentFilter
+            ));
+        }
+
+        // Render functions
+        function renderSchemes(schemes) {
+            const container = document.getElementById('schemes-container');
+            
+            if (schemes.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-search text-4xl mb-3"></i>
+                        <p>${currentLang === 'ml' ? 'പദ്ധതി വിവരങ്ങൾ ലഭ്യമല്ല' : 'No scheme data available'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = schemes.map(scheme => {
+                const typeClass = scheme.type === 'national' ? 'scheme-national' : 'scheme-state';
+                const typeText = scheme.type === 'national' ? translations[currentLang]['national'] : translations[currentLang]['state'];
+                const name = currentLang === 'ml' ? scheme.name_ml : scheme.name;
+                const description = currentLang === 'ml' ? scheme.description_ml : scheme.description;
+                const benefits = currentLang === 'ml' ? scheme.benefits_ml : scheme.benefits;
+                const eligibility = currentLang === 'ml' ? scheme.eligibility_ml : scheme.eligibility;
+                
+                return `
+                    <div class="scheme-card bg-white rounded-xl p-6 mb-4 shadow-sm border-l-4 ${typeClass}">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-800">${name}</h4>
+                                <span class="text-sm text-gray-500">${typeText} ${translations[currentLang]['scheme_type']}</span>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-sm ${
+                                scheme.type === 'national' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                            }">
+                                ${typeText}
+                            </span>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-4">${description}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <span class="text-sm text-gray-500">${translations[currentLang]['benefits']}:</span>
+                                <p class="text-sm">${benefits}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-500">${translations[currentLang]['eligibility']}:</span>
+                                <p class="text-sm">${eligibility}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <span class="text-sm text-gray-500">${translations[currentLang]['implementing_agency']}:</span>
+                                <p class="text-sm font-semibold">${scheme.agency}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-500">${translations[currentLang]['last_date']}:</span>
+                                <p class="text-sm font-semibold">${new Date(scheme.lastDate).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-sm text-gray-500">${translations[currentLang]['contact']}:</span>
+                                <span class="font-semibold">${scheme.contact}</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold" onclick="viewSchemeDetails(${scheme.id})">
+                                    <i class="fas fa-eye mr-1"></i>
+                                    ${translations[currentLang]['view_details']}
+                                </button>
+                                <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors">
+                                    <i class="fas fa-edit mr-1"></i>
+                                    ${translations[currentLang]['apply_now']}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Filter functionality
+        async function applyFilter(filter) {
+            currentFilter = filter;
+            
+            // Update button states
+            document.getElementById('filter-all').classList.remove('bg-gray-800', 'text-white');
+            document.getElementById('filter-national').classList.remove('bg-blue-800', 'text-white');
+            document.getElementById('filter-state').classList.remove('bg-green-800', 'text-white');
+            
+            document.getElementById('filter-all').classList.add('bg-gray-100', 'text-gray-800');
+            document.getElementById('filter-national').classList.add('bg-blue-100', 'text-blue-800');
+            document.getElementById('filter-state').classList.add('bg-green-100', 'text-green-800');
+            
+            if (filter === 'all') {
+                document.getElementById('filter-all').classList.remove('bg-gray-100', 'text-gray-800');
+                document.getElementById('filter-all').classList.add('bg-gray-800', 'text-white');
+            } else if (filter === 'national') {
+                document.getElementById('filter-national').classList.remove('bg-blue-100', 'text-blue-800');
+                document.getElementById('filter-national').classList.add('bg-blue-800', 'text-white');
+            } else if (filter === 'state') {
+                document.getElementById('filter-state').classList.remove('bg-green-100', 'text-green-800');
+                document.getElementById('filter-state').classList.add('bg-green-800', 'text-white');
+            }
+            
+            const result = await schemesAPI.getSchemes(filter);
+            renderSchemes(result.schemes);
+        }
+
+        // View scheme details
+        function viewSchemeDetails(schemeId) {
+            const scheme = keralaSchemes.schemes.find(s => s.id === schemeId);
+            if (scheme) {
+                const name = currentLang === 'ml' ? scheme.name_ml : scheme.name;
+                const benefits = currentLang === 'ml' ? scheme.benefits_ml : scheme.benefits;
+                const eligibility = currentLang === 'ml' ? scheme.eligibility_ml : scheme.eligibility;
+                const description = currentLang === 'ml' ? scheme.description_ml : scheme.description;
+                
+                alert(`${name}\n\n${description}\n\n${translations[currentLang]['benefits']}: ${benefits}\n${translations[currentLang]['eligibility']}: ${eligibility}\n${translations[currentLang]['contact']}: ${scheme.contact}\n${translations[currentLang]['implementing_agency']}: ${scheme.agency}`);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Set up language switcher
+            document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
+            document.getElementById('lang-ml').addEventListener('click', () => setLanguage('ml'));
+            
+            // Set up filters
+            document.getElementById('filter-all').addEventListener('click', () => applyFilter('all'));
+            document.getElementById('filter-national').addEventListener('click', () => applyFilter('national'));
+            document.getElementById('filter-state').addEventListener('click', () => applyFilter('state'));
+            
+            // Load initial data
+            const result = await schemesAPI.getSchemes('all');
+            renderSchemes(result.schemes);
+            
+            // Set initial language
+            setLanguage('en');
+        });
+    </script>
+</body>
+</html>
