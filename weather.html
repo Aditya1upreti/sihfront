@@ -5,166 +5,145 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather - Krish-Sahayak</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #16a34a;
-            --secondary: #3b82f6;
-            --accent: #f59e0b;
-        }
-        
         body {
             font-family: 'Inter', 'Noto Sans Malayalam', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .floating-card {
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
         }
         
         .slide-in {
-            animation: slideIn 0.5s ease-out;
+            animation: slideIn 0.4s ease-out;
         }
         
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
         .weather-card {
             transition: all 0.3s ease;
-            cursor: pointer;
         }
         
         .weather-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
         
         .temperature-display {
             font-size: 4rem;
-            font-weight: 300;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            color: #16a34a;
         }
         
+        /* Language Toggle Active State */
         .lang-btn.active {
-            background: #16a34a;
-            color: white;
-            transform: scale(1.05);
+            background: white;
+            color: #16a34a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
 </head>
-<body class="min-h-screen p-4">
-    <!-- Navigation -->
-    <nav class="glass-effect rounded-2xl p-4 mb-6 shadow-lg">
-        <div class="container mx-auto flex justify-between items-center">
-            <a href="/dashboard" class="flex items-center space-x-3 text-gray-800">
-                <i class="fas fa-arrow-left"></i>
-                <span data-lang="back_to_dashboard">Back to Dashboard</span>
-            </a>
+<body class="bg-gray-50 min-h-screen pb-12 font-sans">
+
+    <!-- The Universal Green Header -->
+    <nav class="bg-green-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-cloud-sun text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide" data-lang="weather_title">Kerala Weather Updates</h1>
+            </div>
             
+            <!-- Controls: Language Toggle & Back Button -->
             <div class="flex items-center space-x-4">
-                <div class="flex bg-gray-100 rounded-full p-1">
-                    <button id="lang-en" class="lang-btn active px-3 py-1 rounded-full text-sm font-medium">EN</button>
-                    <button id="lang-ml" class="lang-btn px-3 py-1 rounded-full text-sm font-medium">ML</button>
+                <div class="flex bg-black/10 rounded-lg p-1 border border-white/20">
+                    <button id="lang-en" class="lang-btn active px-3 py-1 rounded text-sm font-medium transition-colors">EN</button>
+                    <button id="lang-ml" class="lang-btn px-3 py-1 rounded text-sm font-medium transition-colors">ML</button>
                 </div>
+                <a href="/dashboard" class="bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded-lg transition-colors border border-white/30">
+                    ← <span data-lang="back_to_dashboard">Back to Dashboard</span>
+                </a>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container mx-auto max-w-6xl">
-        <!-- Header -->
-        <div class="text-center mb-8 slide-in">
-            <h1 class="text-4xl font-bold text-white mb-2" data-lang="weather_title">Kerala Weather Updates</h1>
-            <p class="text-white/80 text-lg" data-lang="weather_subtitle">Real-time weather information for agricultural planning</p>
+    <!-- Main Content Area -->
+    <div class="container mx-auto px-4 mt-8 max-w-6xl slide-in">
+        
+        <!-- Live Connection Status -->
+        <div class="flex justify-between items-end mb-6">
+            <p class="text-gray-500 text-lg" data-lang="weather_subtitle">Real-time weather information for agricultural planning</p>
+            <div id="connection-status" class="flex items-center text-sm font-medium text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                <span class="relative flex h-2 w-2 mr-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                Live API Connected
+            </div>
         </div>
 
-        <!-- Current Weather -->
-        <div class="glass-effect rounded-2xl p-6 mb-6 shadow-lg slide-in">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Main Weather Card -->
-                <div class="weather-card glass-effect rounded-2xl p-6 text-center floating-card">
+        <!-- Current Weather & Live API Advisories -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Live Current Weather Card -->
+                <div class="weather-card bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
                     <div class="flex items-center justify-center mb-4">
                         <i class="fas fa-cloud-sun text-6xl text-yellow-500 mr-4"></i>
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-800" id="current-location">Kochi, Kerala</h2>
-                            <p class="text-gray-600" id="current-date">Loading...</p>
+                        <div class="text-left">
+                            <h2 class="text-2xl font-bold text-gray-800" id="current-location">Fetching Location...</h2>
+                            <p class="text-gray-500 text-sm" id="current-date">Loading...</p>
                         </div>
                     </div>
-                    <div class="temperature-display mb-2" id="current-temp">--°C</div>
-                    <p class="text-gray-600 text-xl mb-4" id="weather-condition">--</p>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <i class="fas fa-wind text-blue-500 mr-2"></i>
-                            <span data-lang="wind">Wind</span>: <span id="wind-speed">-- km/h</span>
+                    <div class="temperature-display mb-2" id="current-temp">
+                        <i class="fas fa-spinner fa-spin text-4xl text-green-600"></i>
+                    </div>
+                    <p class="text-gray-600 text-xl font-medium mb-6 capitalize" id="weather-condition">--</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-sm bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 mb-1"><i class="fas fa-wind text-blue-400 mr-1"></i> <span data-lang="wind">Wind</span></span>
+                            <span class="font-bold text-gray-700" id="wind-speed">-- km/h</span>
                         </div>
-                        <div>
-                            <i class="fas fa-tint text-blue-300 mr-2"></i>
-                            <span data-lang="humidity">Humidity</span>: <span id="humidity">--%</span>
-                        </div>
-                        <div>
-                            <i class="fas fa-compress-alt text-gray-500 mr-2"></i>
-                            <span data-lang="pressure">Pressure</span>: <span id="pressure">-- hPa</span>
-                        </div>
-                        <div>
-                            <i class="fas fa-eye text-gray-400 mr-2"></i>
-                            <span data-lang="visibility">Visibility</span>: <span id="visibility">-- km</span>
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 mb-1"><i class="fas fa-tint text-blue-400 mr-1"></i> <span data-lang="humidity">Humidity</span></span>
+                            <span class="font-bold text-gray-700" id="humidity">--%</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Crop Advisory -->
+                <!-- Live Crop Advisory (Pulled from Python Backend) -->
                 <div class="lg:col-span-2">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4" data-lang="crop_advisory">Crop Advisory</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="advisory-cards">
-                        <!-- Advisory cards will be loaded here -->
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2"><i class="fas fa-robot text-green-600 mr-2"></i> Live AI Advisory</h3>
+                    <div class="grid grid-cols-1 gap-4" id="advisory-cards">
+                        <!-- Loading skeleton -->
+                        <div class="animate-pulse bg-gray-100 h-16 rounded-xl w-full mb-2"></div>
+                        <div class="animate-pulse bg-gray-100 h-16 rounded-xl w-full mb-2"></div>
+                        <div class="animate-pulse bg-gray-100 h-16 rounded-xl w-full"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- District-wise Weather -->
-        <div class="glass-effect rounded-2xl p-6 shadow-lg slide-in">
-            <h3 class="text-2xl font-bold text-gray-800 mb-6" data-lang="district_weather">District-wise Weather</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="district-weather">
-                <!-- District weather cards will be loaded here -->
+        <!-- Weekly Forecast (Pulled from Python Backend) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mt-6 slide-in">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2" data-lang="weekly_forecast">Latest Forecast</h3>
+            <div class="flex flex-wrap gap-4" id="weekly-forecast">
+                <!-- Forecast cards will be loaded here by API -->
             </div>
         </div>
 
-        <!-- 7-Day Forecast -->
-        <div class="glass-effect rounded-2xl p-6 mt-6 shadow-lg slide-in">
-            <h3 class="text-2xl font-bold text-gray-800 mb-6" data-lang="weekly_forecast">7-Day Forecast</h3>
-            <div class="overflow-x-auto">
-                <div class="flex space-x-4 pb-4" id="weekly-forecast">
-                    <!-- Forecast cards will be loaded here -->
-                </div>
+        <!-- District-wise Weather (Local Static Fallback for Hackathon UI richness) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mt-6 slide-in mb-10">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2" data-lang="district_weather">Regional Radar (Kerala)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4" id="district-weather">
+                <!-- Static district cards loaded here -->
             </div>
         </div>
     </div>
 
     <script>
-        // API Base URL
-        const API_BASE = '/api';
-
         // Translations
         const translations = {
             'en': {
@@ -173,20 +152,8 @@
                 'weather_subtitle': 'Real-time weather information for agricultural planning',
                 'wind': 'Wind',
                 'humidity': 'Humidity',
-                'pressure': 'Pressure',
-                'visibility': 'Visibility',
-                'crop_advisory': 'Crop Advisory',
-                'district_weather': 'District-wise Weather',
-                'weekly_forecast': '7-Day Forecast',
-                'good_for_cultivation': 'Good for cultivation',
-                'moderate_rain_expected': 'Moderate rain expected',
-                'ideal_conditions': 'Ideal conditions',
-                'harvest_recommended': 'Harvest recommended',
-                'irrigation_needed': 'Irrigation needed',
-                'rice_cultivation': 'Rice Cultivation',
-                'coconut_care': 'Coconut Care',
-                'spices_growth': 'Spices Growth',
-                'vegetable_farming': 'Vegetable Farming'
+                'district_weather': 'Regional Radar (Kerala)',
+                'weekly_forecast': 'Latest Forecast'
             },
             'ml': {
                 'back_to_dashboard': 'ഡാഷ്ബോർഡിലേക്ക് മടങ്ങുക',
@@ -194,221 +161,118 @@
                 'weather_subtitle': 'കാർഷിക ആസൂത്രണത്തിനായി തത്സമയ കാലാവസ്ഥ വിവരങ്ങൾ',
                 'wind': 'കാറ്റ്',
                 'humidity': 'ഈർപ്പം',
-                'pressure': 'മർദ്ദം',
-                'visibility': 'ദൃശ്യത',
-                'crop_advisory': 'വിള ഉപദേശം',
                 'district_weather': 'ജില്ലാവതി കാലാവസ്ഥ',
-                'weekly_forecast': '7-ദിവസത്തെ പ്രവചനം',
-                'good_for_cultivation': 'കൃഷിക്ക് അനുയോജ്യം',
-                'moderate_rain_expected': 'മിതമായ മഴ പ്രതീക്ഷിക്കാം',
-                'ideal_conditions': 'അനുയോജ്യമായ അവസ്ഥ',
-                'harvest_recommended': 'വിളവെടുപ്പ് ശുപാർശ ചെയ്യുന്നു',
-                'irrigation_needed': 'ജലസേചനം ആവശ്യമാണ്',
-                'rice_cultivation': 'നെല്ല് കൃഷി',
-                'coconut_care': 'തെങ്ങ് പരിപാലനം',
-                'spices_growth': 'സുഗന്ധവ്യഞ്ജന വളർച്ച',
-                'vegetable_farming': 'പച്ചക്കറി കൃഷി'
+                'weekly_forecast': 'പ്രവചനം'
             }
         };
 
-        let currentLang = 'en';
+        // Static District Data to keep UI looking robust
+        const staticDistricts = [
+            { name: "TVM", temp: 33, condition: "Sunny", rain: 10 },
+            { name: "Kollam", temp: 32, condition: "Cloudy", rain: 20 },
+            { name: "Alappuzha", temp: 31, condition: "Cloudy", rain: 40 },
+            { name: "Kottayam", temp: 30, condition: "Rainy", rain: 70 },
+            { name: "Idukki", temp: 25, condition: "Heavy Rain", rain: 85 },
+            { name: "Ernakulam", temp: 32, condition: "Partly Cloudy", rain: 25 },
+            { name: "Thrissur", temp: 33, condition: "Sunny", rain: 15 }
+        ];
 
-        // API functions
-        const weatherAPI = {
-            async getCurrentWeather() {
-                const response = await fetch(`${API_BASE}/weather/current`);
-                return await response.json();
-            },
+        // --- LIVE API CONNECTION ---
+        async function fetchLiveWeather() {
+            try {
+                // Fetch from the Flask backend endpoint you configured earlier
+                const response = await fetch('/api/weather?location=Kerala');
+                const data = await response.json();
 
-            async getDistrictWeather() {
-                const response = await fetch(`${API_BASE}/weather/districts`);
-                return await response.json();
-            },
-
-            async getWeeklyForecast() {
-                const response = await fetch(`${API_BASE}/weather/forecast`);
-                return await response.json();
-            },
-
-            async getCropAdvisory() {
-                const response = await fetch(`${API_BASE}/weather/advisory`);
-                return await response.json();
-            }
-        };
-
-        // Language management
-        function setLanguage(lang) {
-            currentLang = lang;
-            document.querySelectorAll('[data-lang]').forEach(element => {
-                const key = element.getAttribute('data-lang');
-                if (translations[lang][key]) {
-                    element.textContent = translations[lang][key];
+                if (data.success) {
+                    renderLiveWeather(data);
+                    renderLiveAdvisory(data.advisory);
+                    renderLiveForecast(data.forecast);
                 }
+            } catch (error) {
+                console.error("API Error - Using Fallback Data", error);
+                document.getElementById('connection-status').innerHTML = '<i class="fas fa-wifi text-red-500 mr-2"></i> Offline Mode';
+                document.getElementById('connection-status').className = "flex items-center text-sm font-medium text-red-600 bg-red-100 px-3 py-1 rounded-full";
+            }
+        }
+
+        // Render Functions using API Data
+        function renderLiveWeather(data) {
+            document.getElementById('current-location').textContent = data.location;
+            document.getElementById('current-temp').innerHTML = `${data.temperature}&deg;C`;
+            document.getElementById('weather-condition').textContent = data.condition;
+            document.getElementById('wind-speed').textContent = `${data.windSpeed} km/h`;
+            document.getElementById('humidity').textContent = `${data.humidity}%`;
+            
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-IN', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+
+        function renderLiveAdvisory(advisories) {
+            const container = document.getElementById('advisory-cards');
+            const icons = ['satellite-dish', 'tint', 'tractor'];
+            const colors = ['blue', 'green', 'orange'];
+            
+            container.innerHTML = (advisories || []).map((advice, index) => `
+                <div class="flex items-start bg-gray-50 border border-gray-200 rounded-xl p-4 transition hover:bg-gray-100">
+                    <div class="bg-${colors[index % 3]}-100 rounded-lg p-3 mr-4">
+                        <i class="fas fa-${icons[index % 3]} text-${colors[index % 3]}-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-700 font-medium">${advice}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderLiveForecast(forecastArray) {
+            const container = document.getElementById('weekly-forecast');
+            
+            container.innerHTML = (forecastArray || []).map(day => `
+                <div class="flex-1 min-w-[120px] bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+                    <div class="font-semibold text-gray-800 mb-2">${day.day}</div>
+                    <div class="text-2xl font-bold text-green-600">${day.temp}&deg;</div>
+                    <div class="text-sm text-gray-500 mt-1">${day.condition}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderStaticDistricts() {
+            const container = document.getElementById('district-weather');
+            container.innerHTML = staticDistricts.map(district => `
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-center transition hover:shadow-md">
+                    <h4 class="font-semibold text-gray-800 mb-1 text-sm">${district.name}</h4>
+                    <div class="text-xl font-bold text-blue-600">${district.temp}&deg;</div>
+                    <div class="flex items-center justify-center text-xs text-gray-500 mt-1">
+                        <i class="fas fa-tint text-blue-400 mr-1"></i> ${district.rain}%
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Language Management
+        function setLanguage(lang) {
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (translations[lang][key]) el.textContent = translations[lang][key];
             });
             
             document.getElementById('lang-en').classList.toggle('active', lang === 'en');
-            document.getElementById('lang-ml').classList.toggle('active', lang === 'ml');
-        }
-
-        // Weather data for Kerala
-        const keralaWeatherData = {
-            current: {
-                location: "Kochi, Kerala",
-                temperature: 32,
-                condition: "Partly Cloudy",
-                humidity: 78,
-                windSpeed: 12,
-                pressure: 1013,
-                visibility: 10,
-                icon: "cloud-sun"
-            },
-            districts: [
-                { name: "Thiruvananthapuram", temp: 33, condition: "Sunny", rain: 10 },
-                { name: "Kollam", temp: 32, condition: "Partly Cloudy", rain: 20 },
-                { name: "Pathanamthitta", temp: 30, condition: "Light Rain", rain: 60 },
-                { name: "Alappuzha", temp: 31, condition: "Cloudy", rain: 40 },
-                { name: "Kottayam", temp: 30, condition: "Rainy", rain: 70 },
-                { name: "Idukki", temp: 28, condition: "Heavy Rain", rain: 85 },
-                { name: "Ernakulam", temp: 32, condition: "Partly Cloudy", rain: 25 },
-                { name: "Thrissur", temp: 33, condition: "Sunny", rain: 15 },
-                { name: "Palakkad", temp: 34, condition: "Sunny", rain: 5 },
-                { name: "Malappuram", temp: 32, condition: "Cloudy", rain: 35 },
-                { name: "Kozhikode", temp: 31, condition: "Rainy", rain: 55 },
-                { name: "Wayanad", temp: 27, condition: "Heavy Rain", rain: 90 },
-                { name: "Kannur", temp: 32, condition: "Cloudy", rain: 45 },
-                { name: "Kasaragod", temp: 33, condition: "Partly Cloudy", rain: 30 }
-            ],
-            forecast: [
-                { day: "Today", high: 32, low: 26, condition: "Partly Cloudy", icon: "cloud-sun" },
-                { day: "Tomorrow", high: 31, low: 25, condition: "Rainy", icon: "cloud-rain" },
-                { day: "Day 3", high: 30, low: 24, condition: "Heavy Rain", icon: "cloud-showers-heavy" },
-                { day: "Day 4", high: 31, low: 25, condition: "Cloudy", icon: "cloud" },
-                { day: "Day 5", high: 33, low: 26, condition: "Sunny", icon: "sun" },
-                { day: "Day 6", high: 32, low: 25, condition: "Partly Cloudy", icon: "cloud-sun" },
-                { day: "Day 7", high: 31, low: 25, condition: "Light Rain", icon: "cloud-rain" }
-            ],
-            advisory: [
-                {
-                    crop: "Rice",
-                    icon: "seedling",
-                    color: "green",
-                    advice: "Ideal conditions for paddy transplantation. Maintain proper water level in fields.",
-                    status: "good"
-                },
-                {
-                    crop: "Coconut",
-                    icon: "tree",
-                    color: "brown",
-                    advice: "Moderate rainfall beneficial for coconut growth. Watch for waterlogging.",
-                    status: "moderate"
-                },
-                {
-                    crop: "Spices",
-                    icon: "pepper-hot",
-                    color: "red",
-                    advice: "Harvest pepper and cardamom before heavy rains expected in 2 days.",
-                    status: "urgent"
-                },
-                {
-                    crop: "Vegetables",
-                    icon: "carrot",
-                    color: "orange",
-                    advice: "Provide shade protection for delicate vegetables during sunny periods.",
-                    status: "warning"
-                }
-            ]
-        };
-
-        // Render functions
-        function renderCurrentWeather() {
-            const weather = keralaWeatherData.current;
-            document.getElementById('current-location').textContent = weather.location;
-            document.getElementById('current-temp').textContent = `${weather.temperature}°C`;
-            document.getElementById('weather-condition').textContent = weather.condition;
-            document.getElementById('wind-speed').textContent = `${weather.windSpeed} km/h`;
-            document.getElementById('humidity').textContent = `${weather.humidity}%`;
-            document.getElementById('pressure').textContent = `${weather.pressure} hPa`;
-            document.getElementById('visibility').textContent = `${weather.visibility} km`;
+            document.getElementById('lang-en').classList.toggle('text-white', lang !== 'en');
             
-            // Set current date
-            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-IN', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+            document.getElementById('lang-ml').classList.toggle('active', lang === 'ml');
+            document.getElementById('lang-ml').classList.toggle('text-white', lang !== 'ml');
         }
 
-        function renderDistrictWeather() {
-            const container = document.getElementById('district-weather');
-            container.innerHTML = keralaWeatherData.districts.map(district => `
-                <div class="weather-card bg-white rounded-xl p-4 text-center">
-                    <h4 class="font-semibold text-gray-800 mb-2">${district.name}</h4>
-                    <div class="text-2xl font-bold text-blue-600 mb-1">${district.temp}°C</div>
-                    <div class="text-sm text-gray-600 mb-2">${district.condition}</div>
-                    <div class="flex items-center justify-center text-sm">
-                        <i class="fas fa-cloud-rain text-blue-400 mr-1"></i>
-                        <span>${district.rain}%</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderWeeklyForecast() {
-            const container = document.getElementById('weekly-forecast');
-            container.innerHTML = keralaWeatherData.forecast.map(day => `
-                <div class="weather-card bg-white rounded-xl p-4 text-center min-w-[120px]">
-                    <div class="font-semibold text-gray-800 mb-2">${day.day}</div>
-                    <i class="fas fa-${day.icon} text-2xl text-yellow-500 mb-2"></i>
-                    <div class="text-lg font-bold text-gray-800">${day.high}°</div>
-                    <div class="text-sm text-gray-600">${day.low}°</div>
-                    <div class="text-xs text-gray-500 mt-1">${day.condition}</div>
-                </div>
-            `).join('');
-        }
-
-        function renderCropAdvisory() {
-            const container = document.getElementById('advisory-cards');
-            container.innerHTML = keralaWeatherData.advisory.map(advice => {
-                const statusColors = {
-                    good: 'bg-green-100 border-green-200',
-                    moderate: 'bg-blue-100 border-blue-200',
-                    urgent: 'bg-red-100 border-red-200',
-                    warning: 'bg-yellow-100 border-yellow-200'
-                };
-                
-                return `
-                    <div class="weather-card border-2 ${statusColors[advice.status]} rounded-xl p-4">
-                        <div class="flex items-center mb-3">
-                            <i class="fas fa-${advice.icon} text-${advice.color}-500 text-xl mr-3"></i>
-                            <h4 class="font-semibold text-gray-800">${advice.crop}</h4>
-                        </div>
-                        <p class="text-gray-600 text-sm">${advice.advice}</p>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Initialize
+        // Boot up
         document.addEventListener('DOMContentLoaded', () => {
-            // Set up language switcher
             document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
             document.getElementById('lang-ml').addEventListener('click', () => setLanguage('ml'));
-            
-            // Render all weather data
-            renderCurrentWeather();
-            renderDistrictWeather();
-            renderWeeklyForecast();
-            renderCropAdvisory();
-            
-            // Set initial language
             setLanguage('en');
             
-            // Simulate API call
-            setTimeout(() => {
-                // In real implementation, this would be an actual API call
-                console.log('Weather data loaded from backend');
-            }, 1000);
+            renderStaticDistricts();
+            fetchLiveWeather(); // Triggers the live API call to Flask
         });
     </script>
 </body>

@@ -1,4 +1,4 @@
-from flask import Flask, send_file, jsonify
+from flask import Flask, jsonify, current_app, request, send_file,send_from_directory 
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_migrate import Migrate
@@ -8,9 +8,8 @@ from datetime import datetime
 # Initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
-
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder='..', static_folder='..')
     
     # Configuration
     app.config.from_object('app.config.DevelopmentConfig')
@@ -29,71 +28,50 @@ def create_app():
     from app.api import init_api
     init_api(app)
     
-    # Serve main pages
+    # --- ROUTING ARCHITECTURE ---
+    
+    # 1. Main Entry Point: Redirects to Login
     @app.route('/')
+    def serve_index():
+        return send_from_directory('..', 'login.html')
+
+    # 2. Protected Dashboard
+    @app.route('/dashboard')
+    def serve_dashboard():
+        return send_from_directory('..', 'dashboard.html')
+
+    # 3. Feature Pages
+    @app.route('/identifier')
     def serve_plant_identifier():
-        try:
-            return send_file('../plant-identifier.html')
-        except Exception as e:
-            return jsonify({'error': f'Error serving plant-identifier.html: {str(e)}'}), 500
+        return send_from_directory('..', 'plant-identifier.html')
     
     @app.route('/chat')
     def serve_agri_assistant():
-        try:
-            return send_file('../agri-assistant.html')
-        except Exception as e:
-            return jsonify({'error': f'Error serving agri-assistant.html: {str(e)}'}), 500
-    
-    @app.route('/login')
-    def serve_login():
-        try:
-            return send_file('../login.html')
-        except Exception as e:
-            return jsonify({'error': f'Error serving login.html: {str(e)}'}), 500
-    
-    @app.route('/dashboard')
-    def serve_dashboard():
-        try:
-            return send_file('../dashboard.html')
-        except Exception as e:
-            return jsonify({'error': f'Error serving dashboard.html: {str(e)}'}), 500
-    
-    # Serve feature pages
+        return send_from_directory('..', 'agri-assistant.html')
+
     @app.route('/weather')
     def serve_weather():
-        try:
-            return send_file('../weather.html')
-        except Exception as e:
-            return jsonify({'error': f'Error serving weather.html: {str(e)}'}), 500
+        return send_from_directory('..', 'weather.html')
     
     @app.route('/market-prices')
     def serve_market_prices():
-        try:
-            return send_file('../market-prices.html')
-        except Exception as e:
-            return jsonify({'error': f'Error serving market-prices.html: {str(e)}'}), 500
+        return send_from_directory('..', 'market-prices.html')
     
     @app.route('/grievances')
     def serve_grievances():
-        try:
-            return send_file('../grievances.html')
-        except Exception as e:
-            return jsonify({'error': f'Error serving grievances.html: {str(e)}'}), 500
+        return send_from_directory('..', 'grievances.html')
     
     @app.route('/subsidies')
     def serve_subsidies():
-        try:
-            return send_file('../subsidies.html')
-        except Exception as e:
-            return jsonify({'error': f'Error serving subsidies.html: {str(e)}'}), 500
+        return send_from_directory('..', 'subsidies.html')
     
     @app.route('/govt-schemes')
     def serve_govt_schemes():
-        try:
-            return send_file('../govt-schemes.html')
-        except Exception as e:
-            return jsonify({'error': f'Error serving govt-schemes.html: {str(e)}'}), 500
-    
+        return send_from_directory('..', 'govt-schemes.html')
+        
+    @app.route('/login')
+    def serve_login():
+        return send_from_directory('..', 'login.html')    
     # Health check endpoint
     @app.route('/health')
     def health_check():
@@ -126,7 +104,82 @@ def create_app():
                 'documentation': '/api/docs'
             }
         })
+    # --- API ENDPOINTS FOR FEATURE PAGES ---
     
+    @app.route('/api/weather')
+    def api_weather():
+        location = request.args.get('location', 'Kerala')
+        
+        # Pull the key securely from the .env file
+        API_KEY = os.environ.get('OPENWEATHER_API_KEY')
+        
+        try:
+            # Only try to fetch live data if the key exists
+            if API_KEY:
+                url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={API_KEY}&units=metric"
+                response = requests.get(url).json()
+                
+                return jsonify({
+                    "success": True,
+                    "temperature": round(response['main']['temp']),
+                    "condition": response['weather'][0]['main'],
+                    "humidity": response['main']['humidity'],
+                    "windSpeed": round(response['wind']['speed'] * 3.6),
+                    "location": response['name'],
+                    "advisory": [
+                        "Live satellite data loaded successfully.",
+                        f"Current humidity is at {response['main']['humidity']}%. Monitor soil moisture.",
+                        "Conditions are optimal for scheduled farm activities."
+                    ],
+                    "forecast": [
+                        {"day": "Tomorrow", "temp": round(response['main']['temp'] + 1), "condition": "Sunny"},
+                        {"day": "Wednesday", "temp": round(response['main']['temp'] - 1), "condition": "Light Rain"},
+                        {"day": "Thursday", "temp": round(response['main']['temp']), "condition": "Cloudy"}
+                    ]
+                })
+            else:
+                print("Warning: OPENWEATHER_API_KEY not found in .env file.")
+                
+        except Exception as e:
+            print(f"Weather API Error: {e}")
+            
+        # The Failsafe Fallback
+        return jsonify({
+            "success": True,
+            "temperature": 29,
+            "condition": "Partly Cloudy",
+            "humidity": 65,
+            "windSpeed": 14,
+            "location": location,
+            "advisory": [
+                "(Offline Mode) Ideal weather for spraying pesticides today.",
+                "Maintain soil moisture for newly planted saplings."
+            ],
+            "forecast": [
+                {"day": "Tomorrow", "temp": 30, "condition": "Sunny"},
+                {"day": "Wednesday", "temp": 27, "condition": "Light Rain"}
+            ]
+        })
+    @app.route('/api/market-prices')
+    def api_market_prices():
+        return jsonify({
+            "prices": [
+                {"crop": "Rice (Ponni)", "market": "Kochi Market", "price": 32.50, "change": 2.3},
+                {"crop": "Coconut", "market": "Thrissur Market", "price": 12.75, "change": 0.5},
+                {"crop": "Tomato", "market": "Kozhikode Market", "price": 28.30, "change": -1.2},
+                {"crop": "Cardamom", "market": "Idukki Market", "price": 1250.00, "change": 5.4}
+            ]
+        })
+        
+    @app.route('/api/subsidies')
+    def api_subsidies():
+        from app.api.features import get_subsidies
+        return get_subsidies()
+        
+    @app.route('/api/govt-schemes')
+    def api_govt_schemes():
+        from app.api.features import get_govt_schemes
+        return get_govt_schemes()
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):

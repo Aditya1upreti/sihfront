@@ -1,36 +1,51 @@
+import os
 import requests
 import json
-from app import app
+from typing import Dict, Any
 
 class AIService:
     def __init__(self):
-        self.gemini_api_key = app.config.get('GEMINI_API_KEY')
+        # Read directly from the environment to avoid Flask app context issues
+        self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
+        
+        # FAIL-FAST: Throw an immediate error if the key is missing from the .env file
+        if not self.gemini_api_key:
+            raise ValueError("CRITICAL ERROR: GEMINI_API_KEY is not set in the environment. Please check your .env file.")
+            
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models/"
-        self.text_model = "gemini-1.5-flash-latest"
+        self.text_model = "gemini-3.5-flash"
     
-    def call_gemini_api(self, payload, max_retries=3):
+    def call_gemini_api(self, payload: Dict[str, Any], max_retries: int = 3) -> Dict[str, Any]:
+        """
+        Sends a POST request to the Gemini API with built-in retry logic for server errors.
+        """
         url = f"{self.base_url}{self.text_model}:generateContent?key={self.gemini_api_key}"
         
         for attempt in range(max_retries):
             try:
                 response = requests.post(url, json=payload, timeout=30)
+                
                 if response.status_code == 200:
                     return response.json()
+                
+                # If Gemini's servers are overloaded (503) or crash (500), try again
                 elif response.status_code in [503, 500]:
                     if attempt < max_retries - 1:
                         continue
                     else:
-                        raise Exception("Service unavailable after retries")
+                        raise Exception(f"Gemini Service unavailable after {max_retries} retries.")
+                
+                # For any other error (like 400 Bad Request or 403 Forbidden), fail immediately
                 else:
-                    raise Exception(f"API error: {response.status_code}")
+                    raise Exception(f"Gemini API Error {response.status_code}: {response.text}")
+                    
             except requests.exceptions.RequestException as e:
                 if attempt < max_retries - 1:
                     continue
                 else:
-                    raise e
+                    raise Exception(f"Network error connecting to Gemini API: {str(e)}")
         
         raise Exception("Max retries exceeded")
-
 def analyze_plant_image(image_base64, mime_type, language):
     ai_service = AIService()
     
@@ -46,7 +61,8 @@ Suggested Treatment/Care: [Provide a detailed, step-by-step plan for treatment i
         "contents": [{
             "parts": [
                 {"text": prompt},
-                {"inline_data": {"mime_type": mime_type, "data": image_base64}}
+                # Notice the capital D and capital T below:
+                {"inlineData": {"mimeType": mime_type, "data": image_base64}}
             ]
         }]
     }
@@ -57,8 +73,8 @@ Suggested Treatment/Care: [Provide a detailed, step-by-step plan for treatment i
 def get_ai_response(conversation, user_message):
     ai_service = AIService()
     
-    # Get conversation history
-    messages = conversation.messages.order_by('timestamp').all()
+    # FIX: Sort the Python list in memory instead of querying the database again
+    messages = sorted(conversation.messages, key=lambda msg: msg.timestamp)
     
     # Format history for Gemini API
     formatted_history = []
@@ -84,7 +100,7 @@ def get_ai_response(conversation, user_message):
     
     result = ai_service.call_gemini_api(payload)
     return result['candidates'][0]['content']['parts'][0]['text']
-
+  
 def generate_chat_title(user_message):
     ai_service = AIService()
     

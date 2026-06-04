@@ -25,22 +25,15 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
         }
-        .nav-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #4f46e5;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-        }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4 relative">
 
-    <a href="/chat" class="nav-btn">Go to Agri-Assistant Chat →</a>
+    <div class="w-full max-w-xl flex justify-end mb-4">
+        <a href="/dashboard" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-300">
+            ← Back to Dashboard
+        </a>
+    </div>
 
     <div class="w-full max-w-xl bg-white rounded-2xl shadow-xl p-6 md:p-8 space-y-6">
         <div class="text-center">
@@ -65,11 +58,13 @@
             </div>
             <div id="placeholder-container" class="w-full h-64 bg-gray-100 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300 text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p id="placeholder-text" class="mt-2">Your image will appear here</p>
             </div>
+            
             <input type="file" id="image-input" class="hidden" accept="image/*">
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button id="upload-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -130,7 +125,6 @@
                 'analyze-btn-text': 'Analyze Image',
                 'results-title': 'Analysis Results',
                 'loader-text': 'Analyzing, please wait...',
-                'error-api-key': '<strong>Error:</strong> API Key is missing.',
                 'error-select-image': 'Please select an image first.',
                 'error-invalid-response': 'Could not get a valid analysis.',
                 'error-generic': 'An error occurred: '
@@ -144,7 +138,6 @@
                 'analyze-btn-text': 'ചിത്രം വിശകലനം ചെയ്യുക',
                 'results-title': 'വിശകലന ഫലങ്ങൾ',
                 'loader-text': 'വിശകലനം ചെയ്യുന്നു, ദയവായി കാത്തിരിക്കുക...',
-                'error-api-key': '<strong>തെറ്റ്:</strong> API കീ ലഭ്യമല്ല.',
                 'error-select-image': 'ദയവായി ആദ്യം ഒരു ചിത്രം തിരഞ്ഞെടുക്കുക.',
                 'error-invalid-response': 'സാധുവായ ഒരു വിശകലനം ലഭിച്ചില്ല.',
                 'error-generic': 'ഒരു പിശക് സംഭവിച്ചു: '
@@ -154,12 +147,11 @@
         const setLanguage = (lang) => {
             currentLanguage = lang;
             document.querySelectorAll('[id]').forEach(element => {
-                const translationKey = element.id.replace(/-text$/, ''); // Handle span elements inside buttons
+                const translationKey = element.id.replace(/-text$/, '');
                 if (translations[lang][element.id]) {
                     element.textContent = translations[lang][element.id];
                 }
             });
-            // Also update the text inside the buttons
             document.getElementById('upload-btn-text').textContent = translations[lang]['upload-btn-text'];
             document.getElementById('camera-btn-text').textContent = translations[lang]['camera-btn-text'];
             document.getElementById('analyze-btn-text').textContent = translations[lang]['analyze-btn-text'];
@@ -171,19 +163,30 @@
         langEnBtn.addEventListener('click', () => setLanguage('en-US'));
         langMlBtn.addEventListener('click', () => setLanguage('ml-IN'));
 
-        // Browser TTS function
+        // Browser TTS function with Markdown Sanitizer
         const speakText = (text, lang) => {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
+                // Strip markdown characters before speaking
+                const cleanText = text.replace(/[*#_`]/g, '').trim();
+                const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = lang;
                 window.speechSynthesis.speak(utterance);
             }
         };
 
-        uploadBtn.addEventListener('click', () => { imageInput.removeAttribute('capture'); imageInput.click(); });
-        cameraBtn.addEventListener('click', () => { imageInput.setAttribute('capture', 'environment'); imageInput.click(); });
+        // Button Event Listeners - Toggles the camera mode natively
+        uploadBtn.addEventListener('click', () => { 
+            imageInput.removeAttribute('capture'); 
+            imageInput.click(); 
+        });
+        
+        cameraBtn.addEventListener('click', () => { 
+            imageInput.setAttribute('capture', 'environment'); 
+            imageInput.click(); 
+        });
 
+        // Universal File Handler (Catches both Camera and Gallery images)
         imageInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -205,7 +208,7 @@
             reader.readAsDataURL(file);
         });
 
-        // Updated analyze function for Flask backend
+        // Analyze function for Flask backend
         analyzeBtn.addEventListener('click', async () => {
             if (!imageBase64 || !imageMimeType) {
                 alert(translations[currentLanguage]['error-select-image']);

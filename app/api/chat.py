@@ -1,23 +1,28 @@
 from flask import Blueprint, request, jsonify
 from app.models.chat import Conversation, Message
-# No longer need the User model directly here for lookups, as the decorator handles it.
+from app.models.user import User
 from app import db
 from app.services.ai_services import get_ai_response, generate_chat_title
 from datetime import datetime
-# Import the decorator from your auth file
-from app.api.auth import token_required
+import uuid
 
-chat_bp = Blueprint('chat', __name__, url_prefix='/api/chat')
+# FIX 1: Removed the double '/api' prefix
+chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
-# The get_or_create_user helper function is no longer needed and can be removed,
-# as authentication is now handled by the @token_required decorator.
+# FIX 2: Local Demo Helper - Bypasses JWT and automatically assigns chats to a demo user
+def get_current_user():
+    user = User.query.first()
+    if not user:
+        user = User(uuid=str(uuid.uuid4()), email="demo@example.com")
+        db.session.add(user)
+        db.session.commit()
+    return user
 
 @chat_bp.route('/conversations', methods=['GET'])
-@token_required
-def get_conversations(current_user):
-    """Gets all conversations for the logged-in user."""
+def get_conversations():
+    """Gets all conversations for the demo user."""
     try:
-        # The user is now provided by the @token_required decorator
+        current_user = get_current_user()
         conversations = Conversation.query.filter_by(user_id=current_user.id).order_by(Conversation.created_at.desc()).all()
         
         result = []
@@ -37,21 +42,22 @@ def get_conversations(current_user):
         return jsonify(result)
     
     except Exception as e:
-        return jsonify({'error': 'Failed to retrieve conversations'}), 500
+        return jsonify({'error': f'Failed to retrieve conversations: {str(e)}'}), 500
 
 @chat_bp.route('/conversations', methods=['POST'])
-@token_required
-def create_conversation(current_user):
-    """Creates a new conversation for the logged-in user."""
+def create_conversation():
+    """Creates a new conversation."""
     try:
+        current_user = get_current_user()
         data = request.get_json()
-        language = data.get('lang')
-        welcome_message = data.get('welcomeMessage')
+        
+        # FIX 3: Matched the exact keys the frontend JavaScript is sending
+        language = data.get('language')
+        welcome_message = data.get('initial_message')
         
         if not all([language, welcome_message]):
             return jsonify({'error': 'Missing required fields'}), 400
         
-        # Use the current_user's id provided by the decorator
         conversation = Conversation(
             user_id=current_user.id,
             title='New Chat' if language == 'en-US' else 'പുതിയ ചാറ്റ്',
@@ -79,19 +85,20 @@ def create_conversation(current_user):
         }), 201
     
     except Exception as e:
+        import traceback
+        traceback.print_exc()  # 🔥 THIS PRINTS THE EXACT RED ERROR TO YOUR TERMINAL
         db.session.rollback()
-        return jsonify({'error': 'Failed to create conversation'}), 500
+        return jsonify({'error': f'Failed to create conversation: {str(e)}'}), 500
 
 @chat_bp.route('/conversations/<int:conversation_id>', methods=['DELETE'])
-@token_required
-def delete_conversation(current_user, conversation_id):
-    """Deletes a specific conversation for the logged-in user."""
+def delete_conversation(conversation_id):
+    """Deletes a specific conversation."""
     try:
-        # Ensure the conversation belongs to the current user
+        current_user = get_current_user()
         conversation = Conversation.query.filter_by(id=conversation_id, user_id=current_user.id).first()
         
         if not conversation:
-            return jsonify({'error': 'Conversation not found or access denied'}), 404
+            return jsonify({'error': 'Conversation not found'}), 404
         
         Message.query.filter_by(conversation_id=conversation_id).delete()
         db.session.delete(conversation)
@@ -104,10 +111,10 @@ def delete_conversation(current_user, conversation_id):
         return jsonify({'error': 'Failed to delete conversation'}), 500
 
 @chat_bp.route('/conversations', methods=['DELETE'])
-@token_required
-def delete_all_conversations(current_user):
-    """Deletes all conversations for the logged-in user."""
+def delete_all_conversations():
+    """Deletes all conversations."""
     try:
+        current_user = get_current_user()
         conversations = Conversation.query.filter_by(user_id=current_user.id).all()
         for conv in conversations:
             Message.query.filter_by(conversation_id=conv.id).delete()
@@ -121,21 +128,22 @@ def delete_all_conversations(current_user):
         return jsonify({'error': 'Failed to delete all conversations'}), 500
 
 @chat_bp.route('/conversations/<int:conversation_id>/messages', methods=['POST'])
-@token_required
-def send_message(current_user, conversation_id):
-    """Sends a message in a conversation belonging to the logged-in user."""
+def send_message(conversation_id):
+    """Sends a message to the AI."""
     try:
+        current_user = get_current_user()
         data = request.get_json()
-        prompt = data.get('prompt')
+        
+        # FIX 4: Frontend sends "message", not "prompt"
+        prompt = data.get('message') 
         
         if not prompt:
             return jsonify({'error': 'Prompt is required'}), 400
         
-        # Ensure the conversation belongs to the current user
         conversation = Conversation.query.filter_by(id=conversation_id, user_id=current_user.id).first()
         
         if not conversation:
-            return jsonify({'error': 'Conversation not found or access denied'}), 404
+            return jsonify({'error': 'Conversation not found'}), 404
         
         user_message = Message(
             conversation_id=conversation.id,
@@ -145,6 +153,7 @@ def send_message(current_user, conversation_id):
         )
         db.session.add(user_message)
         
+        # Call the Gemini AI
         ai_response_text = get_ai_response(conversation, prompt)
         
         ai_message = Message(
@@ -180,4 +189,4 @@ def send_message(current_user, conversation_id):
     
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': 'Failed to process message'}), 500
+        return jsonify({'error': f'Failed to process message: {str(e)}'}), 500

@@ -125,11 +125,11 @@
                     
                     <!-- User Menu -->
                     <div class="relative group">
-                        <button class="flex items-center space-x-2 bg-white/20 px-3 py-2 rounded-lg">
-                            <i class="fas fa-user"></i>
-                            <span id="user-name">Loading...</span>
-                            <i class="fas fa-chevron-down text-xs"></i>
-                        </button>
+                        <button class="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors border border-white/30">
+            <i class="fas fa-user-circle text-xl"></i>
+            <span class="font-medium">Suresh Kumar</span>
+            <i class="fas fa-chevron-down text-sm ml-1"></i>
+        </button>
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block">
                             <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
                                 <i class="fas fa-cog mr-2"></i>
@@ -181,16 +181,13 @@
             </div>
 
             <!-- Plant Identifier -->
-            <div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="navigateTo('/')">
-                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+<div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="navigateTo('/identifier')">            <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-leaf text-3xl text-blue-600"></i>
                 </div>
                 <h3 class="font-semibold text-lg mb-2" data-lang="plant_identifier">Plant Identifier</h3>
                 <p class="text-gray-600 text-sm" data-lang="plant_identifier_desc">Identify plants and diseases</p>
             </div>
-
-            <!-- Weather -->
-            <div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="showFeature('weather')">
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="navigateTo('/weather')">
                 <div class="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-cloud-sun text-3xl text-yellow-600"></i>
                 </div>
@@ -198,8 +195,7 @@
                 <p class="text-gray-600 text-sm" data-lang="weather_desc">Real-time weather updates</p>
             </div>
 
-            <!-- Market Prices -->
-            <div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="showFeature('market-prices')">
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="navigateTo('/market-prices')">
                 <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-chart-line text-3xl text-purple-600"></i>
                 </div>
@@ -208,10 +204,8 @@
             </div>
         </div>
 
-        <!-- Additional Features Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <!-- Grievances -->
-            <div class="feature-card glass-effect rounded-2xl p-6 text-center" onclick="showFeature('grievances')">
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center" onclick="navigateTo('/grievances')">
                 <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-exclamation-triangle text-3xl text-red-600"></i>
                 </div>
@@ -219,8 +213,7 @@
                 <p class="text-gray-600 text-sm" data-lang="grievances_desc">Report agricultural issues</p>
             </div>
 
-            <!-- Subsidies -->
-            <div class="feature-card glass-effect rounded-2xl p-6 text-center" onclick="showFeature('subsidies')">
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center" onclick="navigateTo('/subsidies')">
                 <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-hand-holding-usd text-3xl text-indigo-600"></i>
                 </div>
@@ -228,8 +221,7 @@
                 <p class="text-gray-600 text-sm" data-lang="subsidies_desc">Government subsidy schemes</p>
             </div>
 
-            <!-- Govt Schemes -->
-            <div class="feature-card glass-effect rounded-2xl p-6 text-center" onclick="showFeature('govt-schemes')">
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center" onclick="navigateTo('/govt-schemes')">
                 <div class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-landmark text-3xl text-teal-600"></i>
                 </div>
@@ -237,6 +229,7 @@
                 <p class="text-gray-600 text-sm" data-lang="govt_schemes_desc">Agricultural government schemes</p>
             </div>
         </div>
+                  </div>
 
         <!-- Feature Content Area -->
         <div id="feature-content" class="glass-effect rounded-2xl p-6 min-h-96 slide-in">
@@ -246,12 +239,46 @@
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- User Profile -->
-                    <div class="bg-white rounded-xl p-6 shadow-sm">
-                        <h3 class="font-semibold text-lg mb-4" data-lang="your_profile">Your Profile</h3>
-                        <div id="user-profile" class="space-y-3">
-                            <div class="loading-spinner mx-auto"></div>
+                   <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 slide-in">
+                <h3 class="font-bold text-xl mb-6 text-gray-800 border-b pb-2">Farmer Profile</h3>
+                
+                <div id="profile-content">
+                    <!-- Avatar and Name -->
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-2xl font-bold border-2 border-green-200 shadow-sm">
+                            SK
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Suresh Kumar</h3>
+                            <p class="text-sm text-gray-500"><i class="fas fa-phone-alt text-green-500 mr-1"></i> +91 98765 43210</p>
                         </div>
                     </div>
+                    
+                    <!-- Farm Stats Grid -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 hover:shadow-sm transition-shadow">
+                            <p class="text-xs text-gray-500 mb-1">Farm Size</p>
+                            <p class="font-semibold text-gray-800"><i class="fas fa-ruler-combined text-blue-500 mr-1"></i> 2.5 Acres</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 hover:shadow-sm transition-shadow">
+                            <p class="text-xs text-gray-500 mb-1">Primary Crops</p>
+                            <p class="font-semibold text-gray-800"><i class="fas fa-leaf text-green-500 mr-1"></i> Rice, Coconut</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 hover:shadow-sm transition-shadow">
+                            <p class="text-xs text-gray-500 mb-1">Region</p>
+                            <p class="font-semibold text-gray-800"><i class="fas fa-map text-purple-500 mr-1"></i> Ernakulam</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 hover:shadow-sm transition-shadow">
+                            <p class="text-xs text-gray-500 mb-1">Kisan ID</p>
+                            <p class="font-semibold text-gray-800"><i class="fas fa-id-card text-orange-500 mr-1"></i> KR-9842</p>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full bg-white border-2 border-green-600 text-green-600 hover:bg-green-50 font-bold py-2 px-4 rounded-xl transition duration-200">
+                        Edit Profile Details
+                    </button>
+                </div>
+            </div>
 
                     <!-- Quick Stats -->
                     <div class="bg-white rounded-xl p-6 shadow-sm">
@@ -451,117 +478,13 @@
             window.location.href = url;
         }
 
-        function showFeature(feature) {
-            const content = document.getElementById('feature-content');
-            content.innerHTML = '<div class="loading-spinner mx-auto mt-20"></div>';
-            
-            setTimeout(() => {
-                loadFeatureContent(feature);
-            }, 500);
-        }
+        
 
-        async function loadFeatureContent(feature) {
-            const content = document.getElementById('feature-content');
-            
-            try {
-                switch(feature) {
-                    case 'weather':
-                        content.innerHTML = await getWeatherContent();
-                        break;
-                    case 'market-prices':
-                        content.innerHTML = await getMarketPricesContent();
-                        break;
-                    case 'grievances':
-                        content.innerHTML = await getGrievancesContent();
-                        break;
-                    case 'subsidies':
-                        content.innerHTML = await getSubsidiesContent();
-                        break;
-                    case 'govt-schemes':
-                        content.innerHTML = await getGovtSchemesContent();
-                        break;
-                    default:
-                        content.innerHTML = document.getElementById('dashboard-default').innerHTML;
-                }
-            } catch (error) {
-                content.innerHTML = `<div class="text-center text-red-600 mt-20">Error loading ${feature}: ${error.message}</div>`;
-            }
-        }
+       
 
-        // Feature content templates
-        async function getWeatherContent() {
-            const location = currentUser ? `${currentUser.village}, ${currentUser.district}` : 'Kerala';
-            const weatherData = await api.getWeather(location);
-            
-            return `
-                <div class="slide-in">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">${currentLang === 'ml' ? 'കാലാവസ്ഥ വിവരങ്ങൾ' : 'Weather Information'}</h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white rounded-xl p-6 shadow-sm">
-                            <h3 class="font-semibold text-lg mb-4">${currentLang === 'ml' ? 'നിലവിലെ കാലാവസ്ഥ' : 'Current Weather'}</h3>
-                            <div class="text-center">
-                                <i class="fas fa-sun text-6xl text-yellow-500 mb-4"></i>
-                                <div class="text-4xl font-bold text-gray-800">${weatherData.temperature}°C</div>
-                                <div class="text-gray-600 mt-2">${weatherData.condition}</div>
-                                <div class="text-sm text-gray-500 mt-4">
-                                    ${currentLang === 'ml' ? 'ഈർപ്പം' : 'Humidity'}: ${weatherData.humidity}% | 
-                                    ${currentLang === 'ml' ? 'കാറ്റ്' : 'Wind'}: ${weatherData.windSpeed} km/h
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white rounded-xl p-6 shadow-sm">
-                            <h3 class="font-semibold text-lg mb-4">${currentLang === 'ml' ? 'വിളവൈദഗ്ദ്ധ്യം' : 'Crop Advisory'}</h3>
-                            <div class="space-y-3">
-                                ${weatherData.advisory.map(item => `
-                                    <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                                        <i class="fas fa-seedling text-green-600"></i>
-                                        <span>${item}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+        
 
-        async function getMarketPricesContent() {
-            const pricesData = await api.getMarketPrices();
-            
-            return `
-                <div class="slide-in">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">${currentLang === 'ml' ? 'വിപണി വിലകൾ' : 'Market Prices'}</h2>
-                    
-                    <div class="bg-white rounded-xl overflow-hidden shadow-sm">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left">${currentLang === 'ml' ? 'വിള' : 'Crop'}</th>
-                                    <th class="px-6 py-3 text-left">${currentLang === 'ml' ? 'വിപണി' : 'Market'}</th>
-                                    <th class="px-6 py-3 text-right">${currentLang === 'ml' ? 'വില (കി.ഗ്രാം)' : 'Price (kg)'}</th>
-                                    <th class="px-6 py-3 text-right">${currentLang === 'ml' ? 'മാറ്റം' : 'Change'}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                ${pricesData.prices.map(item => `
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">${item.crop}</td>
-                                        <td class="px-6 py-4">${item.market}</td>
-                                        <td class="px-6 py-4 text-right">₹${item.price}</td>
-                                        <td class="px-6 py-4 text-right ${item.change >= 0 ? 'text-green-600' : 'text-red-600'}">
-                                            ${item.change >= 0 ? '+' : ''}${item.change}%
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        }
-
+        
         // ... Similar functions for other features (grievances, subsidies, govt-schemes)
 
         // Logout function

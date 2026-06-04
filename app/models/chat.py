@@ -1,18 +1,10 @@
-
 from app import db
 from datetime import datetime
-
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    uuid = db.Column(db.String(100), unique=True, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    conversations = db.relationship('Conversation', backref='user', lazy=True)
 
 class Conversation(db.Model):
     __tablename__ = 'conversations'
     id = db.Column(db.Integer, primary_key=True)
+    # This ForeignKey is all we need to link back to the User table in user.py!
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     language = db.Column(db.String(10), nullable=False, default='en-US')

@@ -32,16 +32,15 @@
             border-radius: 8px;
             text-decoration: none;
             font-weight: 500;
-            z-index: 30;
+            z-index: 60;
         }
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden">
 
-    <a href="/" class="nav-btn">← Back to Plant Identifier</a>
 
     <div id="language-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl p-8 max-w-sm w-full text-center">
+        <div class="relative z-50 bg-white rounded-lg shadow-xl p-8 max-w-sm w-full text-center">
             <h2 class="text-2xl font-bold mb-4">Select Language</h2>
             <div class="space-y-4">
                 <button id="select-en-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700">English</button>
@@ -62,7 +61,7 @@
     </div>
 
     <div id="recommendation-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div id="recommendation-modal-content" class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full flex flex-col">
+        <div id="recommendation-modal-content" class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-4 flex-shrink-0">
                 <h2 class="text-2xl font-bold text-gray-800">Personalized Recommendations</h2>
                 <button id="close-recommendation-modal" class="text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
@@ -122,6 +121,11 @@
                         <h1 class="text-2xl font-bold text-gray-800 tracking-wide">Agri-Assistant</h1>
                     </div>
                 </div>
+               <div class="w-full max-w-xl flex justify-end mb-4">
+        <a href="/dashboard" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-300">
+            ← Back to Dashboard
+        </a>
+    </div>
             </header>
 
             <div id="chat-view" class="flex-1 flex flex-col overflow-hidden">
@@ -396,7 +400,11 @@
         const speakText = (text, lang) => {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel(); // Stop any previous speech
-                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // FIX: Strip out Markdown characters (*, #, _, `) before creating the utterance
+                const cleanText = text.replace(/[*#_`]/g, '').trim();
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = lang;
                 
                 utterance.onstart = () => { statusBar.textContent = "Speaking..."; };
@@ -451,24 +459,28 @@
         const handleUserInput = async () => {
             const prompt = textInput.value.trim();
             if (!prompt || !activeChatId) return;
+            
             renderMessage(prompt, 'user');
             textInput.value = '';
             chatContainer.scrollTop = chatContainer.scrollHeight;
             showTypingIndicator();
+            
             try {
-                // NOTE: The Flask backend response for sending a message is different.
-                // It directly returns the updated chat object.
-                const updatedChat = await api.sendMessage(activeChatId, prompt);
-                const aiResponse = updatedChat.messages[updatedChat.messages.length - 1]; // Get the last message
+                // FIX: We are now "opening the envelope" sent by the Flask backend
+                const responseData = await api.sendMessage(activeChatId, prompt);
+                const updatedChat = responseData.updatedChat;
+                const aiResponseText = responseData.aiResponse.text; 
                 
                 allChats[activeChatId] = updatedChat;
                 removeTypingIndicator();
-                renderMessage(aiResponse.text, 'ai');
+                
+                // FIX: Pass the exact string text to the render function
+                renderMessage(aiResponseText, 'ai');
                 chatContainer.scrollTop = chatContainer.scrollHeight;
-                renderSidebar(); // To update the title if it changed
+                renderSidebar(); 
                 
                 if (lastInputWasVoice) {
-                    speakText(aiResponse.text, updatedChat.language);
+                    speakText(aiResponseText, updatedChat.language);
                 }
             } catch (error) {
                 console.error("Error handling user input:", error);
