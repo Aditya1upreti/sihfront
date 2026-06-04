@@ -1,33 +1,16 @@
-# run.py
-from app import create_app
 import os
+from app import create_app
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# 1. Load local .env (Render will ignore this and use the variables you typed in their dashboard)
 load_dotenv()
 
+# 2. Create the app instance (Gunicorn looks for this 'app' variable!)
 app = create_app()
 
 if __name__ == '__main__':
-    # Get configuration from environment
-    host = os.environ.get('APP_HOST', '0.0.0.0')
-    port = int(os.environ.get('APP_PORT', 5000))
-    debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
+    # 3. Use the PORT provided by Render, or default to 5000 for local development
+    port = int(os.environ.get("PORT", 5000))
     
-    print(f"🚀 Starting {os.environ.get('APP_NAME', 'Krish-Sahayak')} v{os.environ.get('APP_VERSION', '1.0.0')}")
-    print(f"🌐 Server running on http://{host}:{port}")
-    print(f"🔧 Debug mode: {debug}")
-    print(f"⚙️  Environment: {os.environ.get('FLASK_ENV', 'development')}")
-    
-    # Run the application
-    app.run(
-        host=host,
-        port=port,
-        debug=debug,
-        threaded=True
-    )
-
-app = create_app()
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # 4. In production, 'debug' should usually be False
+    app.run(host='0.0.0.0', port=port, debug=True)
